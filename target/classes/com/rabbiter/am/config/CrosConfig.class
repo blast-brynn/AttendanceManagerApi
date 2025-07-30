@@ -1,0 +1,17 @@
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by FernFlower decompiler)
+//
+
+package com.rabbiter.am.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class CrosConfig implements WebMvcConfigurer {
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**").allowedOriginPatterns(new String[]{"*"}).allowedMethods(new String[]{"POST", "GET", "PUT", "OPTIONS", "DELETE"}).allowCredentials(true).allowedHeaders(new String[]{"*"}).maxAge(3600L);
+    }
+}
