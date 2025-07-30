@@ -1,0 +1,197 @@
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by FernFlower decompiler)
+//
+
+package com.rabbiter.am.controller;
+
+import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.metadata.Sheet;
+import com.alibaba.excel.support.ExcelTypeEnum;
+import com.rabbiter.am.entity.Check;
+import com.rabbiter.am.entity.Employee;
+import com.rabbiter.am.entity.ExportCheck;
+import com.rabbiter.am.service.CheckService;
+import com.rabbiter.am.service.EmployeeService;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+@CrossOrigin
+@RestController
+@RequestMapping({"/check"})
+public class CheckController {
+    @Autowired
+    private CheckService checkService;
+    @Autowired
+    private EmployeeService employeeService;
+
+    @ResponseBody
+    @RequestMapping(
+        value = {"/checkOn"},
+        method = {RequestMethod.POST}
+    )
+    public int checkOn(@RequestBody Check check) throws ParseException {
+        return this.checkService.checkOn(check);
+    }
+
+    @ResponseBody
+    @RequestMapping(
+        value = {"/checkOff"},
+        method = {RequestMethod.POST}
+    )
+    public int checkOff(@RequestBody Check check) throws ParseException {
+        return this.checkService.checkOff(check);
+    }
+
+    @ResponseBody
+    @RequestMapping(
+        value = {"/getCheckOn"},
+        method = {RequestMethod.POST}
+    )
+    public int getCheckOn(@RequestBody Check check) {
+        return this.checkService.getCheckOn(check);
+    }
+
+    @ResponseBody
+    @RequestMapping(
+        value = {"/getCheckOff"},
+        method = {RequestMethod.POST}
+    )
+    public int getCheckOff(@RequestBody Check check) {
+        return this.checkService.getCheckOff(check);
+    }
+
+    @ResponseBody
+    @RequestMapping(
+        value = {"/findByNumber"},
+        method = {RequestMethod.POST}
+    )
+    public List<Check> findByNumber(@RequestBody Check check) {
+        return this.checkService.findByNumber(check.getEmployeeID());
+    }
+
+    @ResponseBody
+    @RequestMapping(
+        value = {"/findByMonth"},
+        method = {RequestMethod.POST}
+    )
+    public List<Check> findByMonth(@RequestBody Check check) {
+        return this.checkService.findByMonth(check.getMonth());
+    }
+
+    @ResponseBody
+    @RequestMapping(
+        value = {"/findByNumberAndMonth"},
+        method = {RequestMethod.POST}
+    )
+    public List<Check> findByNumberAndMonth(@RequestBody Check check) {
+        return this.checkService.findByNumberAndMonth(check);
+    }
+
+    @ResponseBody
+    @RequestMapping(
+        value = {"/getWorkDay"},
+        method = {RequestMethod.GET}
+    )
+    public int getWorkDay() {
+        return this.checkService.getWorkDay("2021-05");
+    }
+
+    @ResponseBody
+    @RequestMapping(
+        value = {"/getCheckInfo"},
+        method = {RequestMethod.POST}
+    )
+    public Check getCheckInfo(@RequestBody Check check) {
+        Check check1 = new Check();
+        check1.setCheckDays(this.checkService.getCheckDayNumber(check));
+        check1.setWorkDays(this.checkService.getWorkDay(check.getMonth()));
+        check1.setLateDays(this.checkService.getLateDayNumber(check));
+        check1.setLeaveEarlyDays(this.checkService.getLeaveEarlyDayNumber(check));
+        String leaveType = "";
+        check1.setLeaveDays1(this.checkService.getLeaveDayNumber(check, "2"));
+        check1.setLeaveDays2(this.checkService.getLeaveDayNumber(check, "3"));
+        check1.setLeaveDays3(this.checkService.getLeaveDayNumber(check, "1"));
+        check1.setLeaveDays4(this.checkService.getLeaveDayNumber(check, "6"));
+        check1.setLeaveDays5(this.checkService.getLeaveDayNumber(check, "7"));
+        check1.setLeaveDays6(this.checkService.getLeaveDayNumber(check, "5"));
+        check1.setLeaveDays7(this.checkService.getLeaveDayNumber(check, "4"));
+        return check1;
+    }
+
+    @ResponseBody
+    @RequestMapping(
+        value = {"/getCheckList"},
+        method = {RequestMethod.POST}
+    )
+    public List<Check> getCheckList(@RequestBody Check check) {
+        List<Check> checkList = new ArrayList();
+
+        for(Employee item : this.employeeService.getAll()) {
+            Check check1 = new Check();
+            Check check2 = new Check();
+            check2.setEmployeeID(item.getNumber());
+            check2.setDate(check.getDate());
+            check2.setMonth(check.getMonth());
+            check1.setEmployeeID(item.getNumber());
+            check1.setEmployeeName(item.getName());
+            check1.setCheckDays(this.checkService.getCheckDayNumber(check2));
+            check1.setWorkDays(this.checkService.getWorkDay(check2.getMonth()));
+            check1.setLateDays(this.checkService.getLateDayNumber(check2));
+            check1.setLeaveEarlyDays(this.checkService.getLeaveEarlyDayNumber(check2));
+            check1.setLeaveDays(this.checkService.getAllLeaveDay(check2));
+            checkList.add(check1);
+        }
+
+        return checkList;
+    }
+
+    @RequestMapping(
+        value = {"/exportExcel"},
+        method = {RequestMethod.GET}
+    )
+    public void export(HttpServletResponse response, @RequestParam String month) throws IOException {
+        Check check = new Check();
+        check.setDate(month);
+        check.setMonth(month);
+        List<Check> checkList = this.getCheckList(check);
+        List<ExportCheck> exportCheckList = new ArrayList();
+
+        for(Check item : checkList) {
+            ExportCheck exportCheck = new ExportCheck();
+            exportCheck.setEmployeeID(item.getEmployeeID());
+            exportCheck.setEmployeeName(item.getEmployeeName());
+            exportCheck.setWorkDays(item.getWorkDays());
+            exportCheck.setCheckDays(item.getCheckDays());
+            exportCheck.setLeaveDays(item.getLeaveDays());
+            exportCheck.setLateDays(item.getLateDays());
+            exportCheck.setLeaveEarlyDays(item.getLeaveEarlyDays());
+            exportCheckList.add(exportCheck);
+        }
+
+        ServletOutputStream out = response.getOutputStream();
+        ExcelWriter writer = new ExcelWriter(out, ExcelTypeEnum.XLSX, true);
+        String fileName = "员工考勤表" + month.substring(0, 7);
+        Sheet sheet = new Sheet(1, 0, ExportCheck.class);
+        sheet.setAutoWidth(Boolean.TRUE);
+        sheet.setSheetName("员工考勤表" + month.substring(0, 7));
+        writer.write(exportCheckList, sheet);
+        response.setHeader("Content-disposition", "attachment;filename=" + new String(fileName.getBytes("gb2312"), "ISO8859-1") + ".xlsx");
+        writer.finish();
+        response.setContentType("multipart/form-data");
+        response.setCharacterEncoding("utf-8");
+        out.flush();
+    }
+}
